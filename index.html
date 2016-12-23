@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+<title>PHP利用smtp类发送邮件范例</title>
+<style type="text/css">
+body,div,p{margin:0;padding:0;}
+body
+{
+	padding-top:50px;
+	overflow:hidden;
+}
+#toemail
+{
+	margin:0 auto;
+	border-width:3px 3px 1px 3px;
+	border-radius:15px 15px 0 0;
+	border-color:#CCC;
+	border-style:solid;
+	width:1000px;
+	height:50px;
+	text-align:center;
+	font-size:35px;
+	font-weight:700;
+	display:block;
+	color:#666;
+}
+#toemail:hover
+{
+
+}
+#title
+{
+	margin:0 auto;
+	border-width:0 3px 3px 3px;
+	border-color:#CCC;
+	border-style:solid;
+	width:1000px;
+	height:50px;
+	text-align:center;
+	font-size:35px;
+	font-weight:700;
+	display:block;
+	color:#666;
+}
+#sendmail
+{
+	margin:0 auto;
+	width:1000px;
+	height:50px;
+	font-weight:700;
+	display:block;
+	border:3px #CCC solid;
+	border-radius:0 0 15px 15px;
+	background-color:transparent;
+	background-image:none;
+	background-size:85px;
+	background-repeat:no-repeat;
+	background-attachment:fixed;
+	background-position:920px 750px;
+	font-size:30px;
+	color:#666;
+}
+.content-div
+{
+	margin:0 auto;
+	width:1000px;
+}
+.btn-msg
+{
+	position:relative;
+	margin:0 auto;
+	width:1000px;
+}
+#msg
+{
+	padding:3px 5px;
+	position:absolute;
+	top:0;
+	left:0;
+	border:none;
+	background-color:none;
+	border-radius:15px;
+	font-size:30px;
+	color:#FFF;
+	display:none;
+}
+.loadding
+{
+	position:absolute;
+	top:-15px;left:460px;
+	background:transparent url('http://p.imba97.cn/image/loadding_1.svg') no-repeat scroll 0 0 / 80px 80px;
+	width:80px;
+	height:80px;
+	z-index:-1;
+	display:none;
+}
+#img_load
+{
+	opacity:0;
+}
+</style>
+</head>
+<body>
+<input type="text" placeholder="收件人邮箱" id="toemail" />
+<input type="text" placeholder="邮件标题" id="title" />
+<div class="content-div">
+	<!-- 加载编辑器的容器 -->
+    <script id="content" type="text/plain">
+
+    </script>
+    <!-- 配置文件 -->
+    <script type="text/javascript" src="./ueditor/ueditor.config.js"></script>
+    <!-- 编辑器源码文件 -->
+    <script type="text/javascript" src="./ueditor/ueditor.all.js"></script>
+    <!-- 实例化编辑器 -->
+    <script type="text/javascript">
+        var ue = UE.getEditor('content');
+    </script>
+</div>
+<div class="btn-msg">
+	<input type="button" id="sendmail" value="发送"  />
+	<div class="loadding"></div>
+	<p id="msg"></p>
+</div>
+
+<div id="img_load">
+	<img src='http://p.imba97.cn/image/loadding_1.svg' />
+</div>
+
+</body>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+<script type="text/javascript">
+var msgKey=true;
+$(document).ready(function(){
+	$('#img_load').hide();
+	$('#sendmail').click(function(){
+		var toemail=$('#toemail').val();
+		var title=$('#title').val();
+		if(toemail==''){msgShow('收件人邮箱不能为空','0');return;};
+		if(title==''){msgShow('邮箱标题不能为空','0');return;};
+		if(!ue.hasContents()){msgShow('邮件内容不能为空','0');return;};
+
+		$('#sendmail').val('').attr('disabled','disabled');
+		$('.loadding').css('display','block');
+		$.ajax({
+			type:'POST',
+			dataType:'json',
+			url:'./sendmail.php',
+			data:{
+				'toemail':toemail,
+				'title':title,
+				'content':ue.getContent()
+			},
+			success:function(json){
+				if(json)
+				{
+					$('#sendmail').val('发送').removeAttr('disabled');
+					$('.loadding').css('display','none');
+					msgShow(json.msg,json.status);
+
+					if(json.status=='1')
+					{
+						$('#toemail').val('');
+						$('#title').val('');
+						ue.execCommand('cleardoc');
+					}
+					else
+					{
+
+					}
+				}
+			},
+			error:function(){
+				msgShow('错误：ajax交互失败');
+				$('#sendmail').val('发送').removeAttr('disabled');
+				$('.loadding').css('display','none');
+			}
+		});
+	});
+});
+function msgShow(msg,status='2')
+{
+	if(!msgKey) return;
+	msgKey=false;
+	switch(status)
+	{
+		case '0':
+			var border='5px #FF5C5C solid';
+			var bg='#AA5C5C';
+		break;
+		case '1':
+			var border='5px #8bff5c solid';
+			var bg='#62aa5c';
+		break;
+		case '2':
+			var border='5px #ffc35c solid';
+			var bg='#be8336';
+		break;
+	}
+	$('#msg').html(msg);
+	var winWidth=$('.btn-msg').width();
+	var btnWindth=$('#msg').outerWidth();
+	var left=(winWidth/2)-(btnWindth/2);
+	$('#msg').css({'left':left,'display':'block','top':80,'opacity':0,'border':border,'background-color':bg}).animate({'opacity':1,'top':60},function(){
+		$(this).delay(1000).animate({'opacity':0,'top':80},function(){
+			$(this).css({'display':'none'});
+			msgKey=true;
+		});
+	});
+}
+</script>
+</html>
