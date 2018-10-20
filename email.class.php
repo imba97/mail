@@ -33,7 +33,7 @@ $this->auth = true;//auth
 
 $this->user = '1149101824';
 
-$this->pass = 'fczfsohncxlxihcg';
+$this->pass = '*******';
 
 #
 
